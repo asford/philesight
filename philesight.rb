@@ -97,6 +97,13 @@ class Philesight
 		@db["_prop_" + key]
 	end
 
+    #
+    # set time
+    #
+
+    def set_time(time)
+        prop_set("date", time.inspect)
+    end
 
 	#
 	# Read a directory and add to the database; this function is recursive
@@ -208,8 +215,6 @@ class Philesight
 			stat = File.lstat(path)
 			@start_dev = stat.dev
 		end
-                time = Time.new
-		prop_set("date", time.inspect)
 		prop_set("root", path)
 		readdir(path, skip, only_dirs)
 	end
@@ -272,8 +277,6 @@ class Philesight
 	#
 
 	def read(file, autosum)
-        time = Time.new
-		prop_set("date", time.inspect)
 		prop_set("root", "/")
 		readfile(file, autosum)
 	end
@@ -400,7 +403,7 @@ class Philesight
 
 		total_path, child_path = Marshal::load( @db[path] )
 		draw_text(cr, @cx, 10,  "%s (%s)" % [ path, filesize_readable(total_path) ], 14, true)
-		draw_text(cr, @cx, @cy * 2 - 20,  "%s" % [prop_get("date")], 12, false)
+		draw_text(cr, @cx, @cy * 2 - 10,  "%s" % [prop_get("date")], 12, false)
 		draw_text(cr, @cx, @cy, "cd ..", 14, true)
 
 		# Draw rings, recursively

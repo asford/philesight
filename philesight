@@ -4,6 +4,7 @@
 require 'getoptlong'
 require 'philesight'
 require 'set'
+require 'time'
 
 opts = GetoptLong.new(
 	[ "--index",           "-i", GetoptLong::REQUIRED_ARGUMENT ],
@@ -12,6 +13,7 @@ opts = GetoptLong.new(
 	[ "--path",	           "-p", GetoptLong::REQUIRED_ARGUMENT ],
 	[ "--db",              "-D", GetoptLong::REQUIRED_ARGUMENT ],
 	[ "--skip",            "-S", GetoptLong::REQUIRED_ARGUMENT ],
+	[ "--time",            "-t", GetoptLong::REQUIRED_ARGUMENT ],
 	[ "--auto",	           "-a", GetoptLong::NO_ARGUMENT       ],
 	[ "--dump",	           "-u", GetoptLong::NO_ARGUMENT       ],
 	[ "--one-file-system", "-1", GetoptLong::NO_ARGUMENT       ],
@@ -36,6 +38,7 @@ def usage
 	puts "  --one-file-system  Skip mount points"
 	puts "  --only-dirs        Index only directory totals, use to decrease index size"
 	puts "  --skip <path>      Skip given filename in index mode"
+    puts "  --time <time>      Set predefined timestamp instead of current time"
 	puts
 	puts "Examples:"
 	puts "  Index to database:   philesight --db <db> --index <path>"
@@ -61,6 +64,7 @@ arg_skip = Set.new
 arg_drawfile = ""
 arg_only_dirs = false
 arg_auto_sum = false
+arg_set_time = nil
 
 opts.each do |opt, arg|
 
@@ -99,6 +103,12 @@ opts.each do |opt, arg|
     when "--auto"
         arg_auto_sum = true
 
+    when "--time"
+        unless(mode) then
+            mode = "time"
+        end
+        arg_set_time = arg
+
 	else
 		usage
 
@@ -117,6 +127,17 @@ else
 	exit 1
 end
 
+#
+# Set time
+#
+
+if(arg_set_time) then
+    time = Time.parse(arg_set_time)
+else 
+    time = Time.new
+end
+
+
 # 
 # Perform requested action
 #
@@ -130,10 +151,16 @@ case mode
 		t.dump()
 
 	when "index"
+        t.set_time(time)
 		t.index(arg_index_dir, arg_skip, arg_one_fs, arg_only_dirs)
 
     when "read"
+        t.set_time(time)
         t.read(arg_read_file, arg_auto_sum)
+
+    when "time"
+        t.set_time(time)
+        print "time changed to #{time}\n"
 
 	else
 		usage()
