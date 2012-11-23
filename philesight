@@ -12,6 +12,7 @@ opts = GetoptLong.new(
 	[ "--path",	           "-p", GetoptLong::REQUIRED_ARGUMENT ],
 	[ "--db",              "-D", GetoptLong::REQUIRED_ARGUMENT ],
 	[ "--skip",            "-S", GetoptLong::REQUIRED_ARGUMENT ],
+	[ "--auto",	           "-a", GetoptLong::NO_ARGUMENT       ],
 	[ "--dump",	           "-u", GetoptLong::NO_ARGUMENT       ],
 	[ "--one-file-system", "-1", GetoptLong::NO_ARGUMENT       ],
 	[ "--only-dirs",       "-o", GetoptLong::NO_ARGUMENT       ],
@@ -30,6 +31,7 @@ def usage
     puts "  --read <file>      Path to file containing the list of files/folders and their size"
     puts "                     Please note that the file has to be sorted in such a way that no"
     puts "                     child appears before its parent; format is '<path><space><size>'"
+	puts "  --auto             sum up all parents (use with --read, no folders may be listed"
 	puts "  --dump             Dump database to readable format"
 	puts "  --one-file-system  Skip mount points"
 	puts "  --only-dirs        Index only directory totals, use to decrease index size"
@@ -58,7 +60,7 @@ arg_path = ""
 arg_skip = Set.new
 arg_drawfile = ""
 arg_only_dirs = false
-
+arg_auto_sum = false
 
 opts.each do |opt, arg|
 
@@ -94,6 +96,9 @@ opts.each do |opt, arg|
 	when "--only-dirs"
 		arg_only_dirs = true
 
+    when "--auto"
+        arg_auto_sum = true
+
 	else
 		usage
 
@@ -128,7 +133,7 @@ case mode
 		t.index(arg_index_dir, arg_skip, arg_one_fs, arg_only_dirs)
 
     when "read"
-        t.read(arg_read_file)
+        t.read(arg_read_file, arg_auto_sum)
 
 	else
 		usage()

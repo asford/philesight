@@ -40,6 +40,24 @@ updated every once in a while of course.
    will not store all individual files into the index, only the directory
    totals. You might want to use this for indexing multi-TB disks.
 
+ * Index building from precalculated list:
+
+   ./phileseight --db {db} --read {file} [--auto]
+
+   {db} is the same as above
+
+   {file} is a list of precalculated file sizes in the format "<path> <size>"
+   where the <path> and the <size> are separated by a single space and the
+   size is given in bytes.
+
+   There are two options for the format of this list. If you don't use the
+   '--auto' switch it will assume that every directory (with its correct size)
+   is also contained in the file in a way that a child is never listed before
+   any of its parents.
+   If you use the switch '--auto' it will sum up the file sizes automatically;
+   in this case you should *not* include any lines with directory paths and
+   there is no condition on the order of the listed files.
+
  * PNG generating: In this mode, philesight generates a graph of the
    filesystem from path and 4 levels downward. i
    
@@ -112,6 +130,11 @@ General Public License for more details.
 
 Changelog
 =========
+
+2012-11-23      Added option to read sizes from file rather than directly from the file
+        system, thus allowing for the use of faster indexing tools and/or covering cases
+        where it is - for whatever reason - not possible to run the indexing over the
+        original file system.
 
 2012-03-30      Moved db file path as an url parameter instead of an hard coded variable, 
 		its allow to use philesight on several datasources

@@ -219,7 +219,7 @@ class Philesight
     # read sizes from given file
     #
 
-    def readfile(file)
+    def readfile(file, autosum)
         handle = File.new(file, "r")
         while(line = handle.gets)
             # split input line <path> <size>
@@ -229,17 +229,39 @@ class Philesight
             if(dir[-1,1] == "/") then
                 dir = dir[0..-2]
             end
-            # find current dir/file
-            curr = dir.split("/").last
-            # find parent dir
-            parent = dir.split("/").slice(0..-2).join("/")
-            # assuming there is a parent, update it
-            if(@db[parent]) then
-                total_parent, child_parent = Marshal::load( @db[parent] )
-                @db[parent] = Marshal::dump( [ total_parent, child_parent << curr ] )
-            end
             # write new entry for current file/dir
             @db[dir] = Marshal::dump( [ size, [] ] )
+            while(dir.split("/").length > 1)
+                # find current dir/file
+                child = dir.split("/").last
+                # find parent dir
+                parent = dir.split("/").slice(0..-2).join("/")
+                if(parent.empty?) then
+                    parent = "/"
+                end
+                # assuming there is a parent, update it
+                if(@db[parent]) then
+                    csize, children = Marshal::load( @db[parent] )
+                else
+                    csize = 0
+                    children = []
+                end
+                if(autosum) then
+                    csize += size
+                    unless(children.include?(child)) then
+                        children << child
+                    end
+                else
+                    children << child
+                end
+                if(@db[parent] or autosum) then
+                    @db[parent] = Marshal::dump( [ csize, children ] )
+                end
+                unless(autosum) then
+                    break
+                end
+                dir = parent
+            end
         end
         handle.close
     end
@@ -249,11 +271,11 @@ class Philesight
 	# Read sizes from file
 	#
 
-	def read(file)
+	def read(file, autosum)
         time = Time.new
 		prop_set("date", time.inspect)
 		prop_set("root", "/")
-		readfile(file)
+		readfile(file, autosum)
 	end
 
 
