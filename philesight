@@ -7,6 +7,7 @@ require 'set'
 
 opts = GetoptLong.new(
 	[ "--index",           "-i", GetoptLong::REQUIRED_ARGUMENT ],
+	[ "--read",            "-r", GetoptLong::REQUIRED_ARGUMENT ],
 	[ "--draw",	           "-d", GetoptLong::REQUIRED_ARGUMENT ],
 	[ "--path",	           "-p", GetoptLong::REQUIRED_ARGUMENT ],
 	[ "--db",              "-D", GetoptLong::REQUIRED_ARGUMENT ],
@@ -26,6 +27,9 @@ def usage
 	puts "  --draw <fname>     Save PNG image to <fname>"
 	puts "  --path <path>      Path to show in generated image"
 	puts "  --index <path>     Top-level directory to start indexing"
+    puts "  --read <file>      Path to file containing the list of files/folders and their size"
+    puts "                     Please note that the file has to be sorted in such a way that no"
+    puts "                     child appears before its parent; format is '<path><space><size>'"
 	puts "  --dump             Dump database to readable format"
 	puts "  --one-file-system  Skip mount points"
 	puts "  --only-dirs        Index only directory totals, use to decrease index size"
@@ -33,6 +37,7 @@ def usage
 	puts
 	puts "Examples:"
 	puts "  Index to database:   philesight --db <db> --index <path>"
+    puts "  File to database:    philesight --db <db> --read <file>"
 	puts "  Generate PNG:        philesight --db <db> --path <path> --draw <png>"
 	puts
 end
@@ -48,6 +53,7 @@ mode = nil
 arg_db = nil
 arg_one_fs = nil
 arg_index_dir = ""
+arg_read_file = ""
 arg_path = ""
 arg_skip = Set.new
 arg_drawfile = ""
@@ -68,6 +74,10 @@ opts.each do |opt, arg|
 	when "--index"
 		mode = "index"
 		arg_index_dir = arg
+
+    when "--read"
+        mode = "read"
+        arg_read_file = arg
 
 	when "--skip"
 		arg_skip << arg.chomp('/')
@@ -116,6 +126,9 @@ case mode
 
 	when "index"
 		t.index(arg_index_dir, arg_skip, arg_one_fs, arg_only_dirs)
+
+    when "read"
+        t.read(arg_read_file)
 
 	else
 		usage()

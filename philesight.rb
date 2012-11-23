@@ -199,7 +199,6 @@ class Philesight
 		return size_total
 	end
 
-
 	#
 	# Index from given path
 	#
@@ -213,6 +212,48 @@ class Philesight
 		prop_set("date", time.inspect)
 		prop_set("root", path)
 		readdir(path, skip, only_dirs)
+	end
+
+
+    #
+    # read sizes from given file
+    #
+
+    def readfile(file)
+        handle = File.new(file, "r")
+        while(line = handle.gets)
+            # split input line <path> <size>
+            dir = line.split(" ").first
+            size = line.split(" ").last.to_i
+            # remove trailing / from <path>
+            if(dir[-1,1] == "/") then
+                dir = dir[0..-2]
+            end
+            # find current dir/file
+            curr = dir.split("/").last
+            # find parent dir
+            parent = dir.split("/").slice(0..-2).join("/")
+            # assuming there is a parent, update it
+            if(@db[parent]) then
+                total_parent, child_parent = Marshal::load( @db[parent] )
+                @db[parent] = Marshal::dump( [ total_parent, child_parent << curr ] )
+            end
+            # write new entry for current file/dir
+            @db[dir] = Marshal::dump( [ size, [] ] )
+        end
+        handle.close
+    end
+
+
+	#
+	# Read sizes from file
+	#
+
+	def read(file)
+        time = Time.new
+		prop_set("date", time.inspect)
+		prop_set("root", "/")
+		readfile(file)
 	end
 
 
