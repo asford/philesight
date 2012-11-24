@@ -39,7 +39,7 @@ class PhilesightCGI
 		cmd = cgi.params['cmd'][0]
         # Only allow to choose every DB if the map hash is empty
         if($map_allowed_db.empty?) then
-            file_db = cgi.params['db'][0]
+            file_db = cgi.params['db'][0].gsub("/","")
         else
             # otherwise read requested DB from requested URL
             script = ENV[$map_key_from_env].split("?").first
