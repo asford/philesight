@@ -79,7 +79,7 @@ class PhilesightCGI
 		case cmd
 
 			when "img" 
-				do_img(path)
+				do_img(path, file_db)
 
 			when "find"
 				if(find_pos =~  /(\d+),(\d+)/) then
@@ -97,7 +97,7 @@ class PhilesightCGI
 	# Generate PNG image for given path
 	#
 
-	def do_img(path)
+	def do_img(path, file_db)
 		puts "Content-type: image/png"
 		puts "Cache-Control: no-cache, must-revalidate"
 		puts "Expires: Sat, 26 Jul 1997 05:00:00 GMT"
@@ -110,7 +110,7 @@ class PhilesightCGI
 			# generate new image
 
 			now = Time.now()
-			fname_img = $path_cache + "/cache-" + Digest::MD5.hexdigest(path)
+			fname_img = $path_cache + "/cache-" + Digest::MD5.hexdigest(file_db + ":" + path)
 
 			if ! File.readable?(fname_img) then
 				@ps.draw(path, fname_img)
