@@ -222,7 +222,7 @@ class PhilesightCGI
 				puts '			<tr><td>Filename</td><td class="size">Size</td></tr>'
 				puts '		</thead>'
 				puts '		<tbody>'
-				puts '			<tr class="parentdir"><td>' + content[0][:path].to_s + '</td><td class="size">' + content[0][:humansize].to_s + '</td></tr>'
+				puts '			<tr class="parentdir"><td>' + content[0][:path].to_s + '</td><td class="size">' + content[0][:humansize].to_s.gsub(" ","&nbsp;") + '</td></tr>'
 
 				if(content[1].size > 0) then
 					linenum = 0
@@ -235,7 +235,7 @@ class PhilesightCGI
 							print '			<tr>'
 						end
 
-						puts '<td><a href="?db='+ CGI.escape(file_db) + '&amp;path='+ CGI.escape(f[:path].to_s) +'">' + f[:path].to_s + '</a></td><td class="size">' + f[:humansize].to_s + '</td></tr>'
+						puts '<td><a href="?db='+ CGI.escape(file_db) + '&amp;path='+ CGI.escape(f[:path].to_s) +'">' + f[:path].to_s + '</a></td><td class="size">' + f[:humansize].to_s.gsub(" ","&nbsp;") + '</td></tr>'
 
 						linenum += 1
 					end
