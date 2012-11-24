@@ -10,7 +10,11 @@ require 'digest/md5'
 # Config variables
 ##############################################################################
 
-$path_db = ""
+$path_db_prefix = "/var/lib/philesight/"
+# an empty hash allow to read all database file in the above configured path
+$map_allowed_db = {}
+# from which environment variable should the lookup key be read
+$map_key_from_env = "REQUEST_URI"
 $img_size = 800
 $img_rings = 4
 $img_gradients = true
@@ -33,13 +37,23 @@ class PhilesightCGI
 		# Get parameters from environment and CGI. 
 		cgi = CGI.new;
 		cmd = cgi.params['cmd'][0]
-                $path_db = cgi.params['db'][0]
+        # Only allow to choose every DB if the map hash is empty
+        if($map_allowed_db.empty?) then
+            file_db = cgi.params['db'][0]
+        else
+            # otherwise read requested DB from requested URL
+            script = ENV[$map_key_from_env].split("?").first
+            unless($map_allowed_db.key?(script)) then
+                return
+            end
+            file_db = $map_allowed_db[script]
+        end
 
 		# Create philesight object and open database
-                @ps = Philesight.new($img_rings, $img_size, $img_gradients)
-		@ps.db_open($path_db)
+        @ps = Philesight.new($img_rings, $img_size, $img_gradients)
+		@ps.db_open($path_db_prefix + "/" + file_db)
 
-                path = cgi.params['path'][0] || @ps.prop_get("root") || "/"
+        path = cgi.params['path'][0] || @ps.prop_get("root") || "/"
 
 		# ISMAP image maps do not return a proper CGI parameter, but only the
 		# coordinates appended after a question mark. If this is found in the
@@ -69,11 +83,11 @@ class PhilesightCGI
 
 			when "find"
 				if(find_pos =~  /(\d+),(\d+)/) then
-					do_find(path, $1.to_i, $2.to_i, $path_db)
+					do_find(path, $1.to_i, $2.to_i, file_db)
 				end
 
 			else 
-				do_show(path)
+				do_show(path, file_db)
 
 		end
 	end
@@ -148,8 +162,8 @@ class PhilesightCGI
 	# Find the path belonging to the ring and segment the user clicked
 	# 
 
-	def do_find(path, x, y, path_db)
-		url = "?db="+ CGI.escape(path_db) + "&amp;path=%s" % CGI.escape(@ps.find(path, x, y))
+	def do_find(path, x, y, file_db)
+		url = "?db="+ CGI.escape(file_db) + "&amp;path=%s" % CGI.escape(@ps.find(path, x, y))
 		puts "Content-type: text/html"
 		puts "Cache-Control: no-cache, must-revalidate"
 		puts "Expires: Sat, 26 Jul 1997 05:00:00 GMT"
@@ -169,7 +183,7 @@ class PhilesightCGI
 	# Generate HTML page with list and graph
 	#
 	
-	def do_show(path)
+	def do_show(path, file_db)
 		random = ""
 		puts "Content-type: text/html"
 		puts "Cache-Control: no-cache, must-revalidate"
@@ -195,8 +209,8 @@ class PhilesightCGI
 		puts '	</style>'
 		puts '</head>'
 		puts '<body>'
-		puts '	<p><a href="' + "?db="+ CGI.escape($path_db) + "&amp;path=" + CGI.escape(path) + "&amp;" + '">'
-		puts '		<img style="border:0" width="' + $img_size.to_s + '" height="' + $img_size.to_s + '" src="?db='+ $path_db + '&cmd=img&path=' + CGI.escape(path) + '" ismap="ismap" alt="' + CGI.escapeHTML(path) + '" />'
+		puts '	<p><a href="' + "?db="+ CGI.escape(file_db) + "&amp;path=" + CGI.escape(path) + "&amp;" + '">'
+		puts '		<img style="border:0" width="' + $img_size.to_s + '" height="' + $img_size.to_s + '" src="?db='+ file_db + '&cmd=img&path=' + CGI.escape(path) + '" ismap="ismap" alt="' + CGI.escapeHTML(path) + '" />'
 		puts '	</a></p>'
 	
 		if $show_list then
@@ -221,7 +235,7 @@ class PhilesightCGI
 							print '			<tr>'
 						end
 
-						puts '<td><a href="?db='+ CGI.escape($path_db) + '&amp;path='+ CGI.escape(f[:path].to_s) +'">' + f[:path].to_s + '</a></td><td class="size">' + f[:humansize].to_s + '</td></tr>'
+						puts '<td><a href="?db='+ CGI.escape(file_db) + '&amp;path='+ CGI.escape(f[:path].to_s) +'">' + f[:path].to_s + '</a></td><td class="size">' + f[:humansize].to_s + '</td></tr>'
 
 						linenum += 1
 					end
