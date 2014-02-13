@@ -97,26 +97,15 @@ updated every once in a while of course.
 Dependencies
 ============
 
-Philesight is written in ruby1.8, and requires the berkely-db4 and cairo
-ruby libraries.
+Philesight is written in ruby 1.9+ and requires the `bdb` and `cairo` gems.
 
-On debian, the following should be sufficient:
+The `bdb` dependency `tuple` does not currently support ruby 2.0, but a 2.0
+compatible gem can be installed via `gem specific_version`.
 
-  # apt-get install libdb4.2-ruby1.8 libcairo-ruby1.8 
-
-On Fedora 10, use
-
-  # yum -y update                                                                                  
-  # yum -y install ruby ruby-cairo ruby-bdb      
-
-I've been told the following should work on RedHat/Centos
-
-  # yum -y update                                                                      
-  # cd /etc/yum.repos.d/                                                               
-  # wget http://centos.karan.org/kbsingh-CentOS-Extras.repo                            
-  # wget http://ruby.gfd-dennou.org/products/rpm/RPMS/CentOS/CentOS-DennouRuby.repo         
-  # yum -y --enablerepo=kbs-CentOS-Testing install ruby bitmap-fonts ruby-bdb ruby-cairo                                                                         
-
+    gem install specific_install
+    gem specific_install -l https://github.com/tandem-softworks/tuple.git
+    gem install bdb
+    gem install cairo
 
 License
 =======
@@ -130,6 +119,8 @@ General Public License for more details.
 
 Changelog
 =========
+
+2014-02-13      Updates to support gem `bdb` and `cairo` dependencies and ruby 1.9+.
 
 2012-11-23      Added option to read sizes from file rather than directly from the file
         system, thus allowing for the use of faster indexing tools and/or covering cases

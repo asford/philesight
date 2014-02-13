@@ -1,4 +1,4 @@
-#!/usr/bin/ruby1.8
+#!/usr/bin/env ruby
 # vi: ts=2 sw=2
 
 require 'getoptlong'
@@ -43,6 +43,11 @@ class Philesight
 		@find_a = 0
 		@find_r = 0
 		@hardlink_list = Set.new()
+
+    @env = Bdb::Env.new(0)
+    @env.open('.', Bdb::DB_CREATE | Bdb::DB_INIT_MPOOL , 0);
+    @db = @env.db
+
 	end
 
 
@@ -51,12 +56,13 @@ class Philesight
 	#
 
 	def db_open(fname)
-		begin
-			@db = BDB::Btree.open fname , nil, BDB::CREATE, 0644, "set_pagesize" => 1024, "set_cachesize" => [0, 32*1024,0]
-		rescue
-			@db = BDB::Btree.open fname , nil, BDB::RDONLY, 0644, "set_pagesize" => 1024, "set_cachesize" => [0, 32*1024,0]
-		end
+			@db.open(nil, fname , nil, Bdb::Db::BTREE, Bdb::DB_CREATE, 0)
 	end
+
+  def close()
+    @db.close(0)
+    @env.close
+  end
 
 
 	#
@@ -362,7 +368,7 @@ class Philesight
 			if(level < @ringcount) then
 				draw_ring(cr, level+1, ang_from, ang_to, f_full)
 			else
-				draw_section(cr, ang_from, ang_to, r_to, r_to+5, 0.5) if(cr && child_f.nitems > 0)
+				draw_section(cr, ang_from, ang_to, r_to, r_to+5, 0.5) if(cr && child_f.count > 0)
 			end
 
 			# Generate and save labels of filenames/sizes

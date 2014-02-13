@@ -1,20 +1,16 @@
-#!/usr/bin/ruby1.8
+#!/usr/bin/env ruby
 #
 # CGI-wrapper for philesight
 
-require 'philesight'
+require_relative 'philesight'
 require 'cgi'
 require 'digest/md5'
 
 ##############################################################################
 # Config variables
 ##############################################################################
-
-$path_db_prefix = "/var/lib/philesight/"
-# an empty hash allow to read all database file in the above configured path
-$map_allowed_db = {}
-# from which environment variable should the lookup key be read
-$map_key_from_env = "REQUEST_URI"
+$path_db_prefix = "."
+$file_db = "philesight_db"
 $img_size = 800
 $img_rings = 4
 $img_gradients = true
@@ -23,8 +19,8 @@ $show_list = true
 # Uncomment the following lines to enable caching. Make sure the $path_cache
 # directory is writable by the httpd user
 
-# $path_cache = "/tmp/philesight"
-# $cache_maxage = 60
+$path_cache = ./cache"
+$cache_maxage = 60
 
 ##############################################################################
 # End of configuration
@@ -32,33 +28,20 @@ $show_list = true
 
 
 class PhilesightCGI
-
 	def initialize()
 		# Get parameters from environment and CGI. 
 		cgi = CGI.new;
 		cmd = cgi.params['cmd'][0]
-        # Only allow to choose every DB if the map hash is empty
-        if($map_allowed_db.empty?) then
-            file_db = cgi.params['db'][0].gsub("/","")
-        else
-            # otherwise read requested DB from requested URL
-            script = ENV[$map_key_from_env].split("?").first
-            unless($map_allowed_db.key?(script)) then
-                return
-            end
-            file_db = $map_allowed_db[script]
-        end
 
 		# Create philesight object and open database
         @ps = Philesight.new($img_rings, $img_size, $img_gradients)
-		@ps.db_open($path_db_prefix + "/" + file_db)
+		@ps.db_open($path_db_prefix + "/" + $file_db)
 
         path = cgi.params['path'][0] || @ps.prop_get("root") || "/"
 
 		# ISMAP image maps do not return a proper CGI parameter, but only the
 		# coordinates appended after a question mark. If this is found in the
 		# QUERY_STRING, assume the 'find' command
-
 		qs = ENV["QUERY_STRING"]
 		if(qs && qs =~ /\?(\d+,\d+)/ ) then
 			find_pos = $1
@@ -77,26 +60,28 @@ class PhilesightCGI
 		# Perform action depending on 'cmd' parameter
 
 		case cmd
-
 			when "img" 
-				do_img(path, file_db)
+				do_img(path, $file_db)
 
 			when "find"
 				if(find_pos =~  /(\d+),(\d+)/) then
-					do_find(path, $1.to_i, $2.to_i, file_db)
+					do_find(path, $1.to_i, $2.to_i, $file_db)
 				end
 
 			else 
-				do_show(path, file_db)
+				do_show(path, $file_db)
 
 		end
 	end
+
+    def close()
+		@ps.close()
+    end
 
 
 	#
 	# Generate PNG image for given path
 	#
-
 	def do_img(path, file_db)
 		puts "Content-type: image/png"
 		puts "Cache-Control: no-cache, must-revalidate"
@@ -157,11 +142,9 @@ class PhilesightCGI
 		end
 	end
 
-
 	#
 	# Find the path belonging to the ring and segment the user clicked
 	# 
-
 	def do_find(path, x, y, file_db)
 		url = "?db="+ CGI.escape(file_db) + "&amp;path=%s" % CGI.escape(@ps.find(path, x, y))
 		puts "Content-type: text/html"
@@ -182,7 +165,6 @@ class PhilesightCGI
 	#
 	# Generate HTML page with list and graph
 	#
-	
 	def do_show(path, file_db)
 		random = ""
 		puts "Content-type: text/html"
@@ -248,11 +230,11 @@ class PhilesightCGI
 		puts '</body>'
 		puts '</html>'
 	end
-
 end
 
 
 philesightcgi = PhilesightCGI.new
+philesightcgi.close()
 
 #
 # vi: ts=4 sw=4

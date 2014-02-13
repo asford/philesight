@@ -1,8 +1,8 @@
-#!/usr/bin/ruby1.8
+#!/usr/bin/env ruby
 # vi: ts=2 sw=2
 
 require 'getoptlong'
-require 'philesight'
+require_relative 'philesight'
 require 'set'
 require 'time'
 
@@ -166,6 +166,8 @@ case mode
 		usage()
 
 end
+
+t.close()
 
 # 
 # End
